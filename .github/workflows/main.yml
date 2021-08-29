@@ -8,5 +8,5 @@ jobs:
         uses: actions/checkout@v2
       - name: Build the zip
         run: |
-          zip -r ../traction-cf7.zip ../traction-cf7 && mv ../traction-cf7.zip ./
+          zip -r ../traction-cf7.zip ../traction-cf7 -x '*.git*' && mv ../traction-cf7.zip ./
           ls -la
