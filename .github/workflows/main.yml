@@ -10,3 +10,8 @@ jobs:
         run: |
           zip -r ../traction-cf7.zip ../traction-cf7 -x '*.git*' && mv ../traction-cf7.zip ./
           ls -la
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "traction-cf7.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
