@@ -4,14 +4,14 @@
  *
  *
  * @link
- * @since             0.0.1
+ * @since             0.0.2
  * @package           traction_cf7
  *
  * @wordpress-plugin
  * Plugin Name:       Traction CF7
  * Plugin URI:        https://github.com/traction-app/traction-cf7
  * Description:       Plugin to send contacts from CF7 to Traction Leads
- * Version:           0.0.1
+ * Version:           0.0.2
  * Author:            Traction
  * Author URI: 		  	https://traction.to
  * License:           GPL-3.0+
@@ -22,6 +22,8 @@
 if (! defined('WPINC')) {
     die;
 }
+
+define('PLUGIN_BASE_FILE', plugin_basename( __FILE__ ));
 
 /**
  * Get tags from WPCF7 Mail
@@ -156,14 +158,14 @@ function send_request_to_api($WPCF7_ContactForm)
 
     wp_remote_post(
         $data['endpoint'],
-        array (
-					'method' => 'POST',
-					'sslverify' => false,
-					'headers' => array(
-						'Content-Type' => 'application/json',
-						'Referer' => $_SERVER['HTTP_REFERER']
-					),
-					'body' => json_encode($data['payload'])
+        array(
+                    'method' => 'POST',
+                    'sslverify' => false,
+                    'headers' => array(
+                        'Content-Type' => 'application/json',
+                        'Referer' => $_SERVER['HTTP_REFERER']
+                    ),
+                    'body' => json_encode($data['payload'])
         )
     );
 }
@@ -206,3 +208,5 @@ add_filter('wpcf7_editor_panels', 'add_integrations_tab', 1, 1);
 add_filter("wpcf7_contact_form_properties", 'set_additional_properties', 10, 2);
 add_action("wpcf7_save_contact_form", 'save_integrations_tab', 10, 1);
 add_action('wpcf7_before_send_mail', 'send_request_to_api');
+
+require_once __DIR__ . '/inc/updater.php';
