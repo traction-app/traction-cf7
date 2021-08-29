@@ -8,8 +8,8 @@ jobs:
         uses: actions/checkout@v2
       - name: Build the zip
         run: |
-          zip -r ../traction-cf7.zip ../traction-cf7 -x '*.git*' && mv ../traction-cf7.zip ./
-          ls -la
+          cd .. && zip -r traction-cf7.zip traction-cf7 -x '*.git*' && mv traction-cf7.zip ./traction-cf7
+          ls -la ./traction-cf7
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "traction-cf7.zip"
