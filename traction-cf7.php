@@ -4,14 +4,14 @@
  *
  *
  * @link
- * @since             0.0.2
+ * @since             0.0.3
  * @package           traction_cf7
  *
  * @wordpress-plugin
  * Plugin Name:       Traction CF7
  * Plugin URI:        https://github.com/traction-app/traction-cf7
  * Description:       Plugin to send contacts from CF7 to Traction Leads
- * Version:           0.0.2
+ * Version:           0.0.3
  * Author:            Traction
  * Author URI: 		  	https://traction.to
  * License:           GPL-3.0+
