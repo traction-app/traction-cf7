@@ -1,13 +1,21 @@
-name: Create Archive
+name: GitHub Actions Demo
 on: [push]
 jobs:
-  build:
+  Explore-GitHub-Actions:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - name: Archive Release
-      uses: thedoctor0/zip-release@master
-      with:
-        type: 'zip'
-        filename: 'traction-cf7.zip'
-        exclusions: '*.git* /*node_modules/* .editorconfig'
+      - run: pwd
+      - run: cd .. && pwd
+      - run: ls -la
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
+      - name: List files in the repository
+        run: |
+          ls ${{ github.workspace }}
+          ls -la
+          pwd 
+          cd .. && pwd
+          zip -h
+      - run: echo "🍏 This job's status is ${{ job.status }}."
