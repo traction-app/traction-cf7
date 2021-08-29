@@ -16,6 +16,11 @@ Just clone this repo and edit it normally
 
 3) Commit the changes
 
+```
+git add .
+git commit -m 'your commit message'
+```
+
 4) Push to tag
 
 ```git push origin 0.0.5```
