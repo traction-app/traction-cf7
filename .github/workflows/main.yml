@@ -4,18 +4,10 @@ jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
     steps:
-      - run: pwd
-      - run: cd .. && pwd
-      - run: ls -la
       - name: Check out repository code
         uses: actions/checkout@v2
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
+      - name: Build the zip
         run: |
-          ls ${{ github.workspace }}
-          ls -la
           pwd 
-          cd .. && pwd
-          zip -h
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+          cd .. && zip traction-cf7 && mv traction-cf7.zip ./traction-cf7
+          cd traction-cf7 && ls -la
