@@ -4,14 +4,14 @@
  *
  *
  * @link
- * @since             0.0.4
+ * @since             0.0.5
  * @package           traction_cf7
  *
  * @wordpress-plugin
  * Plugin Name:       Traction CF7
  * Plugin URI:        https://github.com/traction-app/traction-cf7
  * Description:       Plugin to send contacts from CF7 to Traction Leads
- * Version:           0.0.4
+ * Version:           0.0.5
  * Author:            Traction
  * Author URI: 		  	https://traction.to
  * License:           GPL-3.0+
@@ -206,6 +206,7 @@ add_action('admin_notices', 'show_cf7_plugin_missing_warning');
 // Add actions and filters
 add_filter('wpcf7_editor_panels', 'add_integrations_tab', 1, 1);
 add_filter("wpcf7_contact_form_properties", 'set_additional_properties', 10, 2);
+add_filter('wpcf7_pre_construct_contact_form_properties', 'set_additional_properties', 10, 2 );
 add_action("wpcf7_save_contact_form", 'save_integrations_tab', 10, 1);
 add_action('wpcf7_before_send_mail', 'send_request_to_api');
 

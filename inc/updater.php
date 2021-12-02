@@ -16,9 +16,11 @@ class TractionUpdater
 
     public function __construct()
     {
-        $this->fetchRepositoryInfo();
-        $this->fetchLocalInfo();
-        add_filter('site_transient_update_plugins', array( $this, 'update' ));
+        try {
+            $this->fetchRepositoryInfo();
+            $this->fetchLocalInfo();
+            add_filter('site_transient_update_plugins', array( $this, 'update' ));
+        }  catch ( Exception $e ) {}         
     }
 
 
