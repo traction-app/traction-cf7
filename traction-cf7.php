@@ -4,14 +4,14 @@
  *
  *
  * @link
- * @since             0.0.6
+ * @since             0.0.7
  * @package           traction_cf7
  *
  * @wordpress-plugin
  * Plugin Name:       Traction CF7
  * Plugin URI:        https://github.com/traction-app/traction-cf7
  * Description:       Plugin to send contacts from CF7 to Traction Leads
- * Version:           0.0.6
+ * Version:           0.0.7
  * Author:            Traction
  * Author URI: 		  	https://traction.to
  * License:           GPL-3.0+
@@ -24,6 +24,8 @@ if (! defined('WPINC')) {
 }
 
 define('PLUGIN_BASE_FILE', plugin_basename( __FILE__ ));
+
+require_once __DIR__ . '/inc/channels.php';
 
 /**
  * Get tags from WPCF7 Mail
@@ -156,16 +158,22 @@ function send_request_to_api($WPCF7_ContactForm)
 {
     $data = build_wpcf7_fields($WPCF7_ContactForm);
 
+    $channel = get_origin_channel() ? array(
+        'channel_id' => get_origin_channel()
+    ) : array();    
+
     wp_remote_post(
         $data['endpoint'],
         array(
-                    'method' => 'POST',
-                    'sslverify' => false,
-                    'headers' => array(
-                        'Content-Type' => 'application/json',
-                        'Referer' => $_SERVER['HTTP_REFERER']
-                    ),
-                    'body' => json_encode($data['payload'])
+            'method' => 'POST',
+            'sslverify' => false,
+            'headers' => array(
+                'Content-Type' => 'application/json',
+                'Referer' => $_SERVER['HTTP_REFERER']
+            ),
+            'body' => json_encode(
+                array_merge($data['payload'], $channel),
+            )
         )
     );
 }
@@ -201,6 +209,38 @@ function show_cf7_plugin_missing_warning()
     }
 }
 add_action('admin_notices', 'show_cf7_plugin_missing_warning');
+
+
+/**
+ * Set tracking session when user enter the website for the first time
+ * 
+ * @return void
+ */
+ function set_tracking_session ()
+ {
+    if( !session_id() ) {
+        session_start();
+    }
+    if(! isset($_SESSION['referer']) ) {
+        $_SESSION['referer'] = !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'direct';        
+    }
+    if(! isset($_SESSION['entrypoint']) ) {
+        $_SESSION['entrypoint'] = get_full_url();
+    }
+ }
+ add_action('init', 'set_tracking_session');
+
+
+/**
+ * Get Origin
+ * @return int
+ */
+function get_origin_channel () {
+    $channel = (new TractionChannel(
+        $_SESSION['referer'], $_SESSION['entrypoint']
+    ))->getChannel();    
+    return $channel ? $channel['id'] : null;
+}
 
 
 // Add actions and filters
