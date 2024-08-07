@@ -13,35 +13,58 @@ class TractionUpdater
     private $requires;
     private $latest_download_url;
 
-
     public function __construct()
     {
         try {
-            $this->fetchRepositoryInfo();
             $this->fetchLocalInfo();
-            add_filter('site_transient_update_plugins', array( $this, 'update' ));
-        }  catch ( Exception $e ) {}         
+            $this->fetchRepositoryInfo();
+            add_filter('site_transient_update_plugins', array($this, 'update'));
+        } catch (Exception $e) {
+            error_log('TractionUpdater error: ' . $e->getMessage());
+        }
     }
-
 
     private function fetchRepositoryInfo()
     {
-        $data = get_file_data('https://raw.githubusercontent.com/traction-app/traction-cf7/main/readme.txt', ['Stable tag', 'Tested up to', 'Requires at least']);
+        $response = wp_remote_get('https://raw.githubusercontent.com/traction-app/traction-cf7/main/readme.txt');
+        if (is_wp_error($response)) {
+            throw new Exception('Failed to fetch repository info.');
+        }
 
+        $data = $this->parse_readme($response['body']);
         $this->plugin_slug = 'traction-cf7';
-        $this->latest_version = $data[0];
-        $this->tested_up = $data[1];
-        $this->requires = $data[2];
+        $this->latest_version = $data['Stable tag'];
+        $this->tested_up = $data['Tested up to'];
+        $this->requires = $data['Requires at least'];
         $this->latest_download_url = 'https://github.com/traction-app/traction-cf7/releases/download/' . $this->latest_version . '/traction-cf7.zip';
     }
 
-
     private function fetchLocalInfo()
     {
-        $data = get_file_data(dirname(__FILE__) . '/../readme.txt', ['Stable tag', 'Tested up to', 'Requires at least']);
-        $this->current_version = $data[0];
+        $data = get_file_data(plugin_dir_path(__FILE__) . '/../readme.txt', [
+            'Stable tag' => 'Stable tag',
+            'Tested up to' => 'Tested up to',
+            'Requires at least' => 'Requires at least',
+        ]);
+
+        $this->current_version = $data['Stable tag'];
     }
 
+    private function parse_readme($content)
+    {
+        $data = [];
+        $lines = explode("\n", $content);
+        foreach ($lines as $line) {
+            if (strpos($line, 'Stable tag:') !== false) {
+                $data['Stable tag'] = trim(str_replace('Stable tag:', '', $line));
+            } elseif (strpos($line, 'Tested up to:') !== false) {
+                $data['Tested up to'] = trim(str_replace('Tested up to:', '', $line));
+            } elseif (strpos($line, 'Requires at least:') !== false) {
+                $data['Requires at least'] = trim(str_replace('Requires at least:', '', $line));
+            }
+        }
+        return $data;
+    }
 
     public function update($transient)
     {
@@ -56,7 +79,7 @@ class TractionUpdater
             $res->new_version = $this->latest_version;
             $res->tested = $this->tested_up;
             $res->package = $this->latest_download_url;
-            $transient->response[ $res->plugin ] = $res;
+            $transient->response[$res->plugin] = $res;
         }
 
         return $transient;

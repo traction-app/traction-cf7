@@ -2,30 +2,27 @@
 /**
  * Traction CF7
  *
- *
  * @link
- * @since             0.0.7
+ * @since             0.0.8
  * @package           traction_cf7
  *
  * @wordpress-plugin
  * Plugin Name:       Traction CF7
  * Plugin URI:        https://github.com/traction-app/traction-cf7
  * Description:       Plugin to send contacts from CF7 to Traction Leads
- * Version:           0.0.7
+ * Version:           0.0.8
  * Author:            Traction
- * Author URI: 		  	https://traction.to
+ * Author URI:        https://traction.to
  * License:           GPL-3.0+
  * License URI:       http://www.gnu.org/licenses/gpl-3.0.txt
  */
 
 // If this file is called directly, abort.
-if (! defined('WPINC')) {
+if (!defined('WPINC')) {
     die;
 }
 
-define('PLUGIN_BASE_FILE', plugin_basename( __FILE__ ));
-
-require_once __DIR__ . '/inc/channels.php';
+define('PLUGIN_BASE_FILE', plugin_basename(__FILE__));
 
 /**
  * Get tags from WPCF7 Mail
@@ -41,11 +38,11 @@ function get_mail_tags($post)
         $type = trim($tag['type'], ' *');
         if (empty($type) || empty($tag['name'])) {
             continue;
-        } elseif (! empty($args['include'])) {
-            if (! in_array($type, $args['include'])) {
+        } elseif (!empty($args['include'])) {
+            if (!in_array($type, $args['include'])) {
                 continue;
             }
-        } elseif (! empty($args['exclude'])) {
+        } elseif (!empty($args['exclude'])) {
             if (in_array($type, $args['exclude'])) {
                 continue;
             }
@@ -57,13 +54,13 @@ function get_mail_tags($post)
 }
 
 /**
- * Adds a new tab on conract form 7 screen
+ * Adds a new tab on contact form 7 screen
  * @param [type] $panels [description]
  */
 function add_integrations_tab($panels)
 {
     $integration_panel = array(
-        'title'    => __('Integração Traction'),
+        'title' => __('Integração Traction'),
         'callback' => function ($post) {
             $path = plugin_dir_path(__FILE__);
             set_query_var('post', $post);
@@ -74,7 +71,6 @@ function add_integrations_tab($panels)
     $panels["traction-cf7"] = $integration_panel;
     return $panels;
 }
-
 
 /**
  * Saves the API settings
@@ -88,7 +84,6 @@ function save_integrations_tab($contact_form)
     ]);
 }
 
-
 /**
  * Sets the form additional properties
  * @param [type] $properties   [description]
@@ -99,7 +94,6 @@ function set_additional_properties($properties, $contact_form)
     $properties["wpcf7_api_data"] = isset($properties["wpcf7_api_data"]) ? $properties["wpcf7_api_data"] : array();
     return $properties;
 }
-
 
 /**
  * Build an array with form fields
@@ -124,6 +118,14 @@ function build_wpcf7_fields($form)
         }
     }
 
+    // Adiciona referrer_uri ao payload a partir da sessão
+    if (isset($_SESSION['referrer_uri'])) {
+        $payload['referrer_uri'] = $_SESSION['referrer_uri'];
+    }
+
+    // Adiciona current_uri ao payload usando wp_get_referer
+    $payload['current_uri'] = wp_get_referer();
+
     return array(
         'endpoint' => $data['endpoint'],
         'payload' => $payload
@@ -131,25 +133,7 @@ function build_wpcf7_fields($form)
 }
 
 /**
- * Get Current Page Full URL
- *
- * @return string
- */
-function get_full_url()
-{
-    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
-        $link = "https";
-    } else {
-        $link = "http";
-    }
-    $link .= "://";
-    $link .= $_SERVER['HTTP_HOST'];
-    $link .= $_SERVER['REQUEST_URI'];
-    return $link;
-}
-
-/**
- * Send Contact Form fields throught a POST request
+ * Send Contact Form fields through a POST request
  *
  * @param [type] $WPCF7_ContactForm
  * @return void
@@ -157,10 +141,6 @@ function get_full_url()
 function send_request_to_api($WPCF7_ContactForm)
 {
     $data = build_wpcf7_fields($WPCF7_ContactForm);
-
-    $channel = get_origin_channel() ? array(
-        'channel_id' => get_origin_channel()
-    ) : array();    
 
     wp_remote_post(
         $data['endpoint'],
@@ -171,13 +151,10 @@ function send_request_to_api($WPCF7_ContactForm)
                 'Content-Type' => 'application/json',
                 'Referer' => $_SERVER['HTTP_REFERER']
             ),
-            'body' => json_encode(
-                array_merge($data['payload'], $channel),
-            )
+            'body' => wp_json_encode($data['payload'])
         )
     );
 }
-
 
 /**
  * Check if CF7 plugin is active
@@ -194,7 +171,6 @@ function is_cf7_active()
     }
 }
 
-
 /**
  * Show a warning message if cf7 plugin is not active
  *
@@ -208,45 +184,29 @@ function show_cf7_plugin_missing_warning()
         printf('<div class="%1$s"><p>%2$s</p></div>', esc_attr($class), esc_html($message));
     }
 }
-add_action('admin_notices', 'show_cf7_plugin_missing_warning');
 
+add_action('admin_notices', 'show_cf7_plugin_missing_warning');
 
 /**
  * Set tracking session when user enter the website for the first time
- * 
+ *
  * @return void
  */
- function set_tracking_session ()
- {
-    if( !session_id() ) {
+function set_tracking_session()
+{
+    if (!session_id()) {
         session_start();
     }
-    if(! isset($_SESSION['referer']) ) {
-        $_SESSION['referer'] = !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'direct';        
+    if (!isset($_SESSION['referrer_uri']) && isset($_SERVER['HTTP_REFERER'])) {
+        $_SESSION['referrer_uri'] = esc_url_raw($_SERVER['HTTP_REFERER']);
     }
-    if(! isset($_SESSION['entrypoint']) ) {
-        $_SESSION['entrypoint'] = get_full_url();
-    }
- }
- add_action('init', 'set_tracking_session');
-
-
-/**
- * Get Origin
- * @return int
- */
-function get_origin_channel () {
-    $channel = (new TractionChannel(
-        $_SESSION['referer'], $_SESSION['entrypoint']
-    ))->getChannel();    
-    return $channel ? $channel['id'] : null;
 }
-
+add_action('init', 'set_tracking_session');
 
 // Add actions and filters
 add_filter('wpcf7_editor_panels', 'add_integrations_tab', 1, 1);
 add_filter("wpcf7_contact_form_properties", 'set_additional_properties', 10, 2);
-add_filter('wpcf7_pre_construct_contact_form_properties', 'set_additional_properties', 10, 2 );
+add_filter('wpcf7_pre_construct_contact_form_properties', 'set_additional_properties', 10, 2);
 add_action("wpcf7_save_contact_form", 'save_integrations_tab', 10, 1);
 add_action('wpcf7_before_send_mail', 'send_request_to_api');
 
